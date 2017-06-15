@@ -8,7 +8,7 @@ Node.prototype.measureDistances = function(area_range_obj, rooms_range_obj) {
   var rooms_range = rooms_range_obj.max - rooms_range_obj.min;
   var area_range = area_range_obj.max - area_range_obj.min;
 
-  for (var i in this.neighbours) {
+  for (var i in this.neighbors) {
     var neighbor = this.neighbors[i];
 
     var delta_rooms = neighbor.rooms - this.rooms;
