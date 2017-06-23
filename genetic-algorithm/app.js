@@ -4,28 +4,36 @@
 // BRAIN ––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
 
 var brain = function() {
-  let inputDataArray = [[[{x: 1,y: 2}, {x: 2,y: 5}, {x: 4,y: 5}], [{x: 1,y: 2}, {x: 4,y: 3}, {x: 9,y: 5}],[{x: 3,y: 2}, {x: 4,y: 5}, {x: 19,y: 6}]], "x", "y"];
+  let inputDataArray = [[[{x: 0,y: 0}, {x: 2,y: 5}, {x: 100,y: 100}], [{x: 1,y: 2}, {x: 4,y: 3}, {x: 9,y: 5}],[{x: 3,y: 2}, {x: 4,y: 5}, {x: 19,y: 6}]], "x", "y"];
 
 
-  
-  draw(inputDataArray);
+
+  drawLines(inputDataArray);
 };
 
 
 // D3 ––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
  
-var draw = function(inputDataArray) {
+var drawLines = function(inputDataArray) {
 
   let dataArray = inputDataArray[0],
        prop1 = inputDataArray[1],
        prop2 = inputDataArray[2];
 
+  let margin = {top: 20, right: 20, bottom: 60, left: 60},
+      width = 1000 - margin.left - margin.right,
+      height = 600 - margin.top - margin.bottom;
 
-  var svg = d3.select("svg"),
-    margin = {top: 20, right: 20, bottom: 30, left: 50},
-    width = +svg.attr("width") - margin.left - margin.right,
-    height = +svg.attr("height") - margin.top - margin.bottom,
-    g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+    var svg = d3.select("body").append("svg")
+          .attr("width", width + margin.left + margin.right)
+          .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+          .attr("transform",
+    "translate(" + margin.left + "," + margin.top + ")");
+
+
+
+    var g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
 
   var x = d3.scaleLinear()
@@ -58,9 +66,27 @@ var draw = function(inputDataArray) {
     domainArray = domainArray.concat(dataArray[i+1]);
   }
 
+  //Dynamic domains
+  // x.domain(d3.extent(domainArray, function(d) { return d[prop1]; }));
+  // y.domain(d3.extent(domainArray, function(d) { return d[prop2]; }));
 
-  x.domain(d3.extent(domainArray, function(d) { return d[prop1]; }));
-  y.domain(d3.extent(domainArray, function(d) { return d[prop2]; }));
+  //Static domain
+  x.domain([0, 105]).nice();
+  y.domain([0, 105]).nice();
+
+  svg.append("circle")
+  .attr("transform",
+    "translate(" + margin.left + "," + margin.top + ")")
+    .attr("cx", x(0))
+    .attr("cy", y(0))
+    .attr("r", 3);
+
+    svg.append("circle")
+    .attr("transform",
+    "translate(" + margin.left + "," + margin.top + ")")
+    .attr("cx", x(100))
+    .attr("cy", y(100))
+    .attr("r", 4);
 
   g.append("g")
       .attr("transform", "translate(0," + height + ")")
@@ -84,20 +110,22 @@ var draw = function(inputDataArray) {
       .attr("text-anchor", "end")
       .text("y");
 
+      var generateColor = function() {
+        return '#'+Math.random().toString(16).substr(-6);
+      };
+     
+
       for (let i = 0; i < dataArray.length; i++) {
         g.append("path")
           .datum(dataArray[i])
           .attr("fill", "none")
-          .attr("stroke", function() {return '#'+Math.random().toString(16).substr(-6);})
+          .attr("stroke", generateColor())
           .attr("stroke-linejoin", "round")
           .attr("stroke-linecap", "round")
           .attr("stroke-width", 1.5)
           .attr("d", lineArray[i]);
-        } 
-     
-
-
-
-     
+            
+      }
 };
+
 brain();
