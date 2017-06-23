@@ -1,3 +1,5 @@
+// Disclaimer: This isn't my own code. I just commented it for learning purpouses.
+
 /* 
 Node object properties:
   (Initial)
@@ -173,10 +175,10 @@ NodeList.prototype.draw = function(canvas_id) {
 
   var width = 400;
   var height = 400;
-  ctx.clearRect(0, 0, width, height);
+  ctx.clearRect(0, 0, width, height);  //resets canvas
 
   for (var i in this.nodes) {
-    ctx.save();
+    ctx.save(); // saves the current state of the canvas by pushing it onto a stack
     switch (this.nodes[i].type) {
       case 'apartment': 
         ctx.fillStyle = 'red';
@@ -192,18 +194,18 @@ NodeList.prototype.draw = function(canvas_id) {
     }
 
     var padding = 40;
-    var x_shift_pct = (width - padding) / width;
+    var x_shift_pct = (width - padding) / width; //compensates for padding
     var y_shift_pct = (height - padding) / height;
 
     var x = (this.nodes[i].rooms - this.rooms.min) * (width / rooms_range) * x_shift_pct + (padding / 2);
     var y = (this.nodes[i].area - this.areas.min) * (height / areas_range) * y_shift_pct + (padding / 2);
     y = Math.abs(y - height);
 
-    ctx.translate(x, y);
-    ctx.beginPath();
-    ctx.arc(0, 0, 5, 0, Math.PI*2, true);
-    ctx.fill();
-    ctx.closePath();
+    ctx.translate(x, y); //positions dot for node on canvas using x and y values determined above.
+    ctx.beginPath(); //starts a drawing path (whenever a new element is drawn a path has to be initialised)
+    ctx.arc(0, 0, 3, 0, Math.PI*2, true); //draws the circle 2π rad is a 360deg
+    ctx.fill(); //colors newly created circle
+    ctx.closePath(); //closes the initialised draw path
 
     if ( ! this.nodes[i].type) {
       switch (this.nodes[i].guess.type) {
@@ -264,7 +266,7 @@ var data = [
 ];
 
 var run = function() {
-  nodes = new NodeList(10);
+  nodes = new NodeList(4);
 
   for (var i in data ) {
     nodes.add(new Node(data[i]));
