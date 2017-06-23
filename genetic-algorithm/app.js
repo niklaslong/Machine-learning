@@ -4,18 +4,21 @@
 // BRAIN ––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
 
 var brain = function() {
-  let dataArray = [[{x: 3,y: 4}, {x: 5,y: 7}, {x: 4,y: 5}], "x", "y"];
-  draw(dataArray);
+  let inputDataArray = [[[{x: 1,y: 2}, {x: 2,y: 5}, {x: 4,y: 5}], [{x: 1,y: 2}, {x: 4,y: 3}, {x: 9,y: 5}],[{x: 3,y: 2}, {x: 4,y: 5}, {x: 19,y: 6}]], "x", "y"];
+
+
+  
+  draw(inputDataArray);
 };
 
 
 // D3 ––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
  
- var draw = function(dataArray) {
+var draw = function(inputDataArray) {
 
-   let data = dataArray[0],
-       prop1 = dataArray[1],
-       prop2 = dataArray[2];
+  let dataArray = inputDataArray[0],
+       prop1 = inputDataArray[1],
+       prop2 = inputDataArray[2];
 
 
   var svg = d3.select("svg"),
@@ -31,17 +34,33 @@ var brain = function() {
   var y = d3.scaleLinear()
     .range([height, 0]);
 
-  data.forEach(function(d) {
-      d.age = +d.age; // formats whatever d.age is in d3.csv to number
-      d.count = +d.count;
+  dataArray.forEach(function(data) { data.forEach(function(d) {
+    console.log(d);
+      d[prop1] = +d[prop1]; // formats whatever d.age is in d3.csv to number
+      d[prop2] = +d[prop2];
+    });
   });
 
-  var line = d3.line()
-    .x(function(d) { return x(d[prop1]); })
-    .y(function(d) { return y(d[prop2]); });
 
-  x.domain(d3.extent(data, function(d) { return d[prop1]; }));
-  y.domain(d3.extent(data, function(d) { return d[prop2]; }));
+  var lineArray = [];
+  
+  dataArray.forEach(function(data) {
+    var line = d3.line()
+      .x(function(d) { return x(d[prop1]); })
+      .y(function(d) { return y(d[prop2]); });
+    lineArray.push(line);
+  });
+
+
+  domainArray = [];
+  for (let i = 0; i < dataArray.length-1; i++) {
+    domainArray = dataArray[0]; 
+    domainArray = domainArray.concat(dataArray[i+1]);
+  }
+
+
+  x.domain(d3.extent(domainArray, function(d) { return d[prop1]; }));
+  y.domain(d3.extent(domainArray, function(d) { return d[prop2]; }));
 
   g.append("g")
       .attr("transform", "translate(0," + height + ")")
@@ -65,16 +84,20 @@ var brain = function() {
       .attr("text-anchor", "end")
       .text("y");
 
-  g.append("path")
-      .datum(data)
-      .attr("fill", "none")
-      .attr("stroke", "steelblue")
-      .attr("stroke-linejoin", "round")
-      .attr("stroke-linecap", "round")
-      .attr("stroke-width", 1.5)
-      .attr("d", line);
+      for (let i = 0; i < dataArray.length; i++) {
+        g.append("path")
+          .datum(dataArray[i])
+          .attr("fill", "none")
+          .attr("stroke", function() {return '#'+Math.random().toString(16).substr(-6);})
+          .attr("stroke-linejoin", "round")
+          .attr("stroke-linecap", "round")
+          .attr("stroke-width", 1.5)
+          .attr("d", lineArray[i]);
+        } 
+     
 
 
- };
 
+     
+};
 brain();
