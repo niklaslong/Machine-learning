@@ -1,12 +1,59 @@
+var generateAngle = function() {
+  let deg  = Math.random() * (180 - 0); 
+  let rad = deg * (Math.PI) / 180; 
+  return rad;
+};
+ 
+// generates a random chord from previous chord
+// Input: {x, y} of previous chord. If no previous chord is specified {x: 0, y: 0} is default param.
+// Output: {x: y} (generated choord)
+var generateCoord = function(coord = {x: 50, y: 0}) {
+  let newCoord = {x: null, y: null};
+
+  let alphaX = generateAngle();
+  let alphaY = generateAngle(); 
+
+  newCoord.x = coord.x + Math.cos(alphaX) * 5;
+  newCoord.y = coord.y + Math.sin(alphaY) * 5;
+
+  return newCoord;
+};
+
+var generatePath = function() {
+  let path = [{x: 50, y: 0}]; //all paths start at starting point
+  let latestCoord;
+    
+  for (let i = 0; i <= 22; i++) {
+    latestCoord = generateCoord(latestCoord);
+    path.push(latestCoord);
+  }
+
+return path;
+};
+
+var createDataArray = function() {
+  let pathArray = [];
+  let formatedDataArray = [];
+
+  for (let i = 0; i <= 10; i++) {
+    let path = generatePath();
+    pathArray.push(path);
+  }
+
+  formatedDataArray.push(pathArray, "x", "y");
+
+  return formatedDataArray;
+};
+
 
 
 
 // BRAIN ––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
 
 var brain = function() {
-  let inputDataArray = [[[{x: 0,y: 0}, {x: 2,y: 5}, {x: 100,y: 100}], [{x: 1,y: 2}, {x: 4,y: 3}, {x: 9,y: 5}],[{x: 3,y: 2}, {x: 4,y: 5}, {x: 19,y: 6}]], "x", "y"];
+  // let inputDataArray = [[[{x: 50,y: 0}, {x: 2,y: 5}, {x: 50,y: 100}], [{x: 1,y: 2}, {x: 4,y: 3}, {x: 9,y: 5}],[{x: 3,y: 2}, {x: 4,y: 5}, {x: 19,y: 6}]], "x", "y"];
 
-
+  let inputDataArray = (createDataArray());
 
   drawLines(inputDataArray);
 };
@@ -22,7 +69,7 @@ var drawLines = function(inputDataArray) {
 
   let margin = {top: 20, right: 20, bottom: 60, left: 60},
       width = 1000 - margin.left - margin.right,
-      height = 600 - margin.top - margin.bottom;
+      height = 700 - margin.top - margin.bottom;
 
     var svg = d3.select("body").append("svg")
           .attr("width", width + margin.left + margin.right)
@@ -43,7 +90,6 @@ var drawLines = function(inputDataArray) {
     .range([height, 0]);
 
   dataArray.forEach(function(data) { data.forEach(function(d) {
-    console.log(d);
       d[prop1] = +d[prop1]; // formats whatever d.age is in d3.csv to number
       d[prop2] = +d[prop2];
     });
@@ -77,14 +123,14 @@ var drawLines = function(inputDataArray) {
   svg.append("circle")
   .attr("transform",
     "translate(" + margin.left + "," + margin.top + ")")
-    .attr("cx", x(0))
+    .attr("cx", x(50))
     .attr("cy", y(0))
     .attr("r", 3);
 
     svg.append("circle")
     .attr("transform",
     "translate(" + margin.left + "," + margin.top + ")")
-    .attr("cx", x(100))
+    .attr("cx", x(50))
     .attr("cy", y(100))
     .attr("r", 4);
 
