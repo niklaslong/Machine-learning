@@ -25,7 +25,7 @@
     let path = [{x: 50, y: 0}]; //all paths start at starting point
     let latestCoord;
       
-    for (let i = 0; i <= 22; i++) { //change max value for i (number of segments per path)
+    for (let i = 0; i < 23; i++) { //change max value for i (number of segments per path)
       latestCoord = generateCoord(latestCoord);
       path.push(latestCoord);
     }
@@ -37,7 +37,7 @@
     let pathArray = [];
     let formatedDataArray = [];
 
-    for (let i = 0; i <= 10; i++) {
+    for (let i = 0; i < 10; i++) { // number of paths
       let path = generatePath();
       pathArray.push(path);
     }
@@ -47,7 +47,7 @@
     return formatedDataArray;
   };
 
-// FITNESS FUNCTIONS –––––––––––––––––––––––––––––––––––––––––––––––––––
+// FITNESS FUNCTION ––––––––––––––––––––––––––––––––––––––––––––––––––––
 
   var calculateDistance = function(lastCoords) { // last coords is {x: ,y: }
     let endPoint = {x: 50, y: 100}; // Objective to reach for path
@@ -75,14 +75,108 @@
     for (let i in pathArray) {
       let lastCoords = pathArray[i][pathArray[i].length-1]; //last coords in path
       let score = calculateFitness(lastCoords);
-      evaluatedPathArray[i].push(score);
+      evaluatedPathArray[i].push({rawFitness: score});
     }
 
     return evaluatedPathArray;
   };
 
 
-// BRAIN ––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+// SELECTION –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+
+  var normalise = function(evaluatedPathArray) {
+    let workingArray = arrayDeepCopy(evaluatedPathArray),
+        rawFitnessArray = [],
+        fitnessTotal = 0;
+
+    for (let i in workingArray) {
+      rawFitnessArray.push(workingArray[i].slice(-1).pop());
+    }
+
+    for (let i in rawFitnessArray) {
+      fitnessTotal += rawFitnessArray[i].rawFitness;
+    }
+
+    for (let i in workingArray) {
+      let normFitness = lastElementInArray(workingArray[i]).rawFitness / fitnessTotal;
+      workingArray[i][workingArray[i].length-1].normalisedFitness = normFitness;
+    }
+    return workingArray;
+  };
+
+  var sortDescending = function(normalisedPathArray) {
+    let workingArray = arrayDeepCopy(normalisedPathArray);
+
+    workingArray.sort(function(a, b) {
+      return b[b.length-1].normalisedFitness - a[a.length-1].normalisedFitness;
+    });
+    return workingArray;
+  };
+
+  var accumulateFitness = function(sortedNormArray) {
+    let workingArray = arrayDeepCopy(sortedNormArray);
+
+    for (let i in workingArray) {
+      workingArray[i][workingArray[i].length-1].accumulatedFitness = 0;
+      for (let j = 0; j <= i; j++) {
+
+        workingArray[i][workingArray[i].length-1].accumulatedFitness += 
+        workingArray[j][workingArray[j].length-1].normalisedFitness;
+
+      }
+    }
+
+    // verification
+    // for (let i in workingArray) {
+    //   console.log(lastElementInArray(workingArray[i]).accumulatedFitness);
+    // }
+        
+    return workingArray;
+  };
+
+  var selectParent = function(workingArray) {
+    let R = Math.random(),
+        selectedParent = [{accumulatedFitness: -1}];
+
+    for (let i in workingArray) {
+      if (lastElementInArray(workingArray[i]).accumulatedFitness > lastElementInArray(selectedParent).accumulatedFitness) {
+        if (lastElementInArray(workingArray[i]).accumulatedFitness < R) { 
+          selectedParent = workingArray[i];
+        }
+      }
+    }
+    return selectedParent;
+  };
+
+  var selectParents = function(workingArray) {
+    let selectedParentsArray = [],
+        n = 10; // number of selected parents 
+
+    while (selectedParentsArray.length < n) {
+      let selectedParent = selectParent(workingArray);
+
+      if (lastElementInArray(selectedParent).accumulatedFitness > -1) {
+        selectedParentsArray.push(selectedParent);
+      }
+    }
+
+    return selectedParentsArray;
+  };
+
+  var selection = function(evaluatedPathArray) {
+    let pathArrayToSelect = arrayDeepCopy(evaluatedPathArray);
+
+    let normalisedPathArray = normalise(pathArrayToSelect);
+    let sortedNormArray = sortDescending(normalisedPathArray);
+    let accumulatedFitnessArray = accumulateFitness(sortedNormArray);
+
+    let selectedParents = selectParents(accumulatedFitnessArray);
+
+    return sortedNormArray;
+  };
+
+
+// BRAIN –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
 
   var brain = function() {
     // let inputDataArray = [[[{x: 50,y: 0}, {x: 2,y: 5}, {x: 50,y: 100}], [{x: 1,y: 2}, {x: 4,y: 3}, {x: 9,y: 5}],[{x: 3,y: 2}, {x: 4,y: 5}, {x: 19,y: 6}]], "x", "y"];
@@ -90,11 +184,16 @@
     let inputDataArray = (createDataArray());
     let pathArray = arrayDeepCopy(inputDataArray[0]);
 
-    let evaluatedPathArray = fitness(pathArray);
+    let evaluatedPathArray = arrayDeepCopy(fitness(pathArray));
+    let selectedPathArray = selection(evaluatedPathArray);
+
+  
 
     console.log('inputDataArray: ', inputDataArray);
     console.log('pathArray: ', pathArray);
     console.log('evaluatedPathArray: ', evaluatedPathArray);
+    console.log('selectedPathArray: ', selectedPathArray);
+
 
     drawLines(inputDataArray);
   };
@@ -104,6 +203,10 @@
     var arrayDeepCopy = function(array) {
       var copy = JSON.parse(JSON.stringify(array));
       return copy;
+    };
+
+    var lastElementInArray = function(array) {
+      return array[array.length-1];
     };
 
 
