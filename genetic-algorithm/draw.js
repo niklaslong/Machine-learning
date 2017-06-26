@@ -1,11 +1,9 @@
-let pathData;
+
 
 var draw = function() {
   for (let i in pathData) {
     drawLines([pathData[i], 'x', 'y']);
   }
-
-  console.log(pathData);
 };
 
 var drawLines = function(inputDataArray) {
@@ -44,7 +42,7 @@ var drawLines = function(inputDataArray) {
 
 
     var lineArray = [];
-    
+
     dataArray.forEach(function(data) {
       var line = d3.line()
         .x(function(d) { return x(d[prop1]); })
@@ -55,7 +53,7 @@ var drawLines = function(inputDataArray) {
 
     domainArray = [];
     for (let i = 0; i < dataArray.length-1; i++) {
-      domainArray = dataArray[0]; 
+      domainArray = dataArray[0];
       domainArray = domainArray.concat(dataArray[i+1]);
     }
 
@@ -91,7 +89,7 @@ var drawLines = function(inputDataArray) {
         .attr("x", width)
         .attr("text-anchor", "start")
         .text("x");
-      
+
 
     g.append("g")
         .call(d3.axisLeft(y))
@@ -106,7 +104,7 @@ var drawLines = function(inputDataArray) {
         var generateColor = function() {
           return '#'+Math.random().toString(16).substr(-6);
         };
-      
+
 
         for (let i = 0; i < dataArray.length; i++) {
           g.append("path")
@@ -117,7 +115,7 @@ var drawLines = function(inputDataArray) {
             .attr("stroke-linecap", "round")
             .attr("stroke-width", 1.5)
             .attr("d", lineArray[i]);
-              
+
         }
 
   };
