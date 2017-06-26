@@ -37,7 +37,7 @@
     let pathArray = [];
     let formatedDataArray = [];
 
-    for (let i = 0; i < 10; i++) { // number of paths
+    for (let i = 0; i < 100; i++) { // number of paths
       let path = generatePath();
       pathArray.push(path);
     }
@@ -150,7 +150,7 @@
 
   var selectParents = function(workingArray) {
     let selectedParentsArray = [],
-        n = 10; // number of selected parents 
+        n = 5; // number of selected parents 
 
     while (selectedParentsArray.length < n) {
       let selectedParent = selectParent(workingArray);
@@ -172,30 +172,145 @@
 
     let selectedParents = selectParents(accumulatedFitnessArray);
 
-    return sortedNormArray;
+    return selectedParents;
+  };
+
+
+// CROSSOVER –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+
+  var selectCouple = function(parentsArray, n) {
+    let coupleArray = [],
+        one = Math.floor(Math.random() * (n - 0)),
+        two = Math.floor(Math.random() * (n - 0));
+
+    coupleArray.push(parentsArray[one], parentsArray[two]);
+
+    return coupleArray;  
+  };
+
+  var createChild = function(coupleArray) {
+    let father = arrayDeepCopy(coupleArray[0]),
+        mother = arrayDeepCopy(coupleArray[1]),
+        child = [];
+        
+    for (let i in father) {
+      let num = Math.floor(Math.random() * (2));
+      
+      num === 0 ? child.push(father[i]) : child.push(mother[i]);
+    }
+
+    return child;
+  };
+
+  var createChildren = function(parentsArray) {
+    let n = parentsArray.length, // number of parents
+        c = 100,                  // number of children
+        childrenArray = [],
+        i = 0;
+
+    while (i < c) {
+      let coupleArray = selectCouple(parentsArray, n);
+      child = createChild(coupleArray);
+      
+      childrenArray.push(child);
+      i = childrenArray.length;
+    }
+
+    return childrenArray;
+  };
+
+  var crossOver = function(selectedParentsArray) {
+    let parentsArray = arrayDeepCopy(selectedParentsArray);
+    let childrenArray = createChildren(parentsArray);
+
+    return childrenArray;
+  };
+
+  // MUTATION ––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+
+  var mutate = function(workingArray, xOrY) {
+    
+    for (let i in workingArray) {
+      for (let j in workingArray[i]) {
+        let num = Math.random();
+
+        if (num < 0.2) {
+          let plusOrMinus = Math.random() * (2),
+              mutation = Math.random() * (5); // segment length
+
+          plusOrMinus === 0 ? workingArray[i][j][xOrY] += mutation : workingArray[i][j][xOrY] -= mutation;
+        }
+      }
+    }
+    
+  return workingArray;
+
+  };
+
+  var mutation = function(inputArray) {
+    let childrenArray = arrayDeepCopy(inputArray);
+
+    mutate(childrenArray, 'x');
+    mutate(childrenArray, 'y');
+
+    return childrenArray;
   };
 
 
 // BRAIN –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
 
+  var nextGeneration = function(pathArray) {
+    let evaluatedPathArray = arrayDeepCopy(fitness(pathArray));
+    let selectedParentsArray = selection(evaluatedPathArray);
+
+
+    let childrenArray = crossOver(selectedParentsArray);
+    let mutatedChildrenArray = mutation(childrenArray);
+
+    // console.log('inputDataArray: ', inputDataArray);
+    // console.log('pathArray: ', pathArray);
+    // console.log('evaluatedPathArray: ', evaluatedPathArray);
+    // console.log('selectedParentsArray: ', selectedParentsArray);
+
+    return mutatedChildrenArray;
+  };
+
+  var generateNGenerations = function(pathArray, n) {
+
+    let currentGeneration = arrayDeepCopy(pathArray);
+    let generationArray = [];
+    
+    for (let i = 0; i < n; i++) {
+      generationArray.push(currentGeneration);
+      currentGeneration = arrayDeepCopy(nextGeneration(currentGeneration));
+    }
+
+    return generationArray;
+  };
+
   var brain = function() {
-    // let inputDataArray = [[[{x: 50,y: 0}, {x: 2,y: 5}, {x: 50,y: 100}], [{x: 1,y: 2}, {x: 4,y: 3}, {x: 9,y: 5}],[{x: 3,y: 2}, {x: 4,y: 5}, {x: 19,y: 6}]], "x", "y"];
+    let i = 0;
 
     let inputDataArray = (createDataArray());
     let pathArray = arrayDeepCopy(inputDataArray[0]);
 
-    let evaluatedPathArray = arrayDeepCopy(fitness(pathArray));
-    let selectedPathArray = selection(evaluatedPathArray);
+    // let generation1 = arrayDeepCopy(nextGeneration(pathArray));
+    // let generation2 = arrayDeepCopy(nextGeneration(generation1));
+    // let generation3 = arrayDeepCopy(nextGeneration(generation2));
 
-  
-
-    console.log('inputDataArray: ', inputDataArray);
-    console.log('pathArray: ', pathArray);
-    console.log('evaluatedPathArray: ', evaluatedPathArray);
-    console.log('selectedPathArray: ', selectedPathArray);
+    let generationArray = arrayDeepCopy(generateNGenerations(pathArray, 2));
 
 
-    drawLines(inputDataArray);
+    // for (let i in generationArray) {
+    //   drawLines([generationArray[i], 'x', 'y']);
+    // }
+
+
+    // drawLines(inputDataArray);
+    // drawLines([generation1, 'x', 'y']);
+    // drawLines([generation2, 'x', 'y']);
+    // drawLines([generation3, 'x', 'y']);
+    return generationArray;
   };
 
   // HELPER CODE –––––––––––––––––––––––––––––––––––––––––––––––––––––––
@@ -209,126 +324,31 @@
       return array[array.length-1];
     };
 
+    // Durstenfeld shuffle (computer optimized Fischer-Yates shuffle) 
+    // 1. Works from end to begining - selects last el, sets it = to currEl
+    // 2. Selects random number between 0 and i (array.length decrementing) (i+1 necessary otherwise last el excluded)
+    // 3. Swaps random el (array[j] for last array[i])
+    // 4. Continues until it arrives at the begining of array.
+    var shuffleArray = function(inputArray) {
+      let array = arrayDeepCopy(inputArray);
+
+      for (let i = array.length - 1; i > 0; i--) {
+        let currEl = array[i],
+            j = Math.floor(Math.random() * (i + 1));
+
+        array[i] = array[j]; 
+        array[j] = currEl;
+      }
+      return array;
+    };
+
 
 // D3 ––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
- 
-  var drawLines = function(inputDataArray) {
 
-    let dataArray = inputDataArray[0],
-        prop1 = inputDataArray[1],
-        prop2 = inputDataArray[2];
-
-    let margin = {top: 20, right: 20, bottom: 60, left: 60},
-        width = 1000 - margin.left - margin.right,
-        height = 700 - margin.top - margin.bottom;
-
-      var svg = d3.select("body").append("svg")
-            .attr("width", width + margin.left + margin.right)
-            .attr("height", height + margin.top + margin.bottom)
-          .append("g")
-            .attr("transform",
-      "translate(" + margin.left + "," + margin.top + ")");
-
-
-
-      var g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-
-    var x = d3.scaleLinear()
-      .range([0, width]);
-
-    var y = d3.scaleLinear()
-      .range([height, 0]);
-
-    dataArray.forEach(function(data) { data.forEach(function(d) {
-        d[prop1] = +d[prop1]; // formats whatever d.age is in d3.csv to number
-        d[prop2] = +d[prop2];
-      });
-    });
-
-
-    var lineArray = [];
-    
-    dataArray.forEach(function(data) {
-      var line = d3.line()
-        .x(function(d) { return x(d[prop1]); })
-        .y(function(d) { return y(d[prop2]); });
-      lineArray.push(line);
-    });
-
-
-    domainArray = [];
-    for (let i = 0; i < dataArray.length-1; i++) {
-      domainArray = dataArray[0]; 
-      domainArray = domainArray.concat(dataArray[i+1]);
-    }
-
-    //Dynamic domains
-    // x.domain(d3.extent(domainArray, function(d) { return d[prop1]; }));
-    // y.domain(d3.extent(domainArray, function(d) { return d[prop2]; }));
-
-    //Static domain
-    x.domain([0, 105]).nice();
-    y.domain([0, 105]).nice();
-
-    svg.append("circle")
-    .attr("transform",
-      "translate(" + margin.left + "," + margin.top + ")")
-      .attr("cx", x(50))
-      .attr("cy", y(0))
-      .attr("r", 3);
-
-      svg.append("circle")
-      .attr("transform",
-      "translate(" + margin.left + "," + margin.top + ")")
-      .attr("cx", x(50))
-      .attr("cy", y(100))
-      .attr("r", 4);
-
-    g.append("g")
-        .attr("transform", "translate(0," + height + ")")
-          .call(d3.axisBottom(x))
-        .append("text")
-        .attr("fill", "#000")
-        .attr("dx", "0.71em")
-        .attr("y", 30)
-        .attr("x", width)
-        .attr("text-anchor", "start")
-        .text("x");
-      
-
-    g.append("g")
-        .call(d3.axisLeft(y))
-      .append("text")
-        .attr("fill", "#000")
-        .attr("transform", "rotate(-90)")
-        .attr("y", 6)
-        .attr("dy", "0.71em")
-        .attr("text-anchor", "end")
-        .text("y");
-
-        var generateColor = function() {
-          return '#'+Math.random().toString(16).substr(-6);
-        };
-      
-
-        for (let i = 0; i < dataArray.length; i++) {
-          g.append("path")
-            .datum(dataArray[i])
-            .attr("fill", "none")
-            .attr("stroke", generateColor())
-            .attr("stroke-linejoin", "round")
-            .attr("stroke-linecap", "round")
-            .attr("stroke-width", 1.5)
-            .attr("d", lineArray[i]);
-              
-        }
-  };
-
-
-
+  //See draw file;
 
 
 // RUN THE APP ––––––––––––––––––––––––––––––––––––––––––––––––––––––––– 
   
-  brain();
+  let output = brain();
+  console.log(JSON.stringify(output));
