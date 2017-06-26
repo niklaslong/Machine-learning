@@ -126,7 +126,7 @@ var getData = function() {
   fetch("data.json")
   .then(response => response.json())
   .then(data => {
-    pathData = data;
+    pathData = JSON.parse(data);
   })
   .then(function() {
     draw();

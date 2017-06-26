@@ -37,7 +37,7 @@
     let pathArray = [];
     let formatedDataArray = [];
 
-    for (let i = 0; i < 100; i++) { // number of paths
+    for (let i = 0; i < 10; i++) { // number of paths
       let path = generatePath();
       pathArray.push(path);
     }
@@ -204,7 +204,7 @@
 
   var createChildren = function(parentsArray) {
     let n = parentsArray.length, // number of parents
-        c = 100,                  // number of children
+        c = 10,                  // number of children
         childrenArray = [],
         i = 0;
 
@@ -260,6 +260,7 @@
 // BRAIN –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
 
   var nextGeneration = function(pathArray) {
+    
     let evaluatedPathArray = arrayDeepCopy(fitness(pathArray));
     let selectedParentsArray = selection(evaluatedPathArray);
 
@@ -281,7 +282,7 @@
     let generationArray = [];
     
     for (let i = 0; i < n; i++) {
-      generationArray.push(currentGeneration);
+      generationArray.push(arrayDeepCopy(currentGeneration));
       currentGeneration = arrayDeepCopy(nextGeneration(currentGeneration));
     }
 
@@ -298,8 +299,9 @@
     // let generation2 = arrayDeepCopy(nextGeneration(generation1));
     // let generation3 = arrayDeepCopy(nextGeneration(generation2));
 
-    let generationArray = arrayDeepCopy(generateNGenerations(pathArray, 2));
+    let generationArray = arrayDeepCopy(generateNGenerations(pathArray, 3));
 
+    let output = arrayDeepCopy(generationArray);
 
     // for (let i in generationArray) {
     //   drawLines([generationArray[i], 'x', 'y']);
@@ -350,5 +352,11 @@
 
 // RUN THE APP ––––––––––––––––––––––––––––––––––––––––––––––––––––––––– 
   
-  let output = brain();
+  let output = arrayDeepCopy(brain());
+
+  // function myWrite(output) {
+  //   fs.appendFile('output.txt', output, function (err) {
+  //     if (err) { /* Do whatever is appropriate if append fails*/ }
+  //   });
+// }
   console.log(JSON.stringify(output));
