@@ -27,6 +27,35 @@
     return pathArray;
   };
 
+  // FITNESS FUNCTION ––––––––––––––––––––––––––––––––––––––––––––––––––
+
+    var calculateDistance = function(angleArray, nodeArray, endPoint) {
+      let lastPoints = [];
+      for (let i = 0; i < nodeArray.length; i++) {
+        lastPoints.push(nodeArray[i].reverse()[0]); // getting last point in nodeArray 
+      }
+
+      for (let i = 0; i < angleArray.length; i++) {
+        let lastCoords = lastPoints[i],
+            deltaX = endPoint.x - lastCoords.x, // difference in x distance between path's last coord & endpoint
+            deltaY = endPoint.y - lastCoords.y, // same for y
+            deltaD = Math.sqrt(deltaX * deltaX + deltaY * deltaY); // same for total
+
+        angleArray[i].unshift({distance: deltaD});
+      }
+      return angleArray;
+    };
+
+    var fitness = function(pathArray, l, startPoint, endPoint) {
+      let angleArray = arrayDeepCopy(pathArray),
+          nodeArray = arrayDeepCopy(calculateNodes(angleArray, l, startPoint)),
+          angle_w_distance_a = arrayDeepCopy(calculateDistance(angleArray, nodeArray, endPoint));
+      
+          
+
+      return 'nothing returned from fitness yet!';
+    };
+
   // BRAIN –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
 
   var brain = function() {
@@ -40,8 +69,10 @@
 
     let pathArray = arrayDeepCopy(createDataArray(n, s));
 
+    console.log(fitness(pathArray, l, startPoint, endPoint));
+
     //D3
-    let d3Data = createD3Data(pathArray, l, startPoint);
+    let d3Data = createD3Data(pathArray, l, startPoint, endPoint);
     drawLines(d3Data);
   };
 
@@ -76,7 +107,7 @@
       return array;
     };
 
-// DRAW HELPER –––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+// DRAW and FITNESS HELPER –––––––––––––––––––––––––––––––––––––––––––––––––––––––––
 
   var calculateXY = function(angle, l, coord = {x: 50, y: 0}) {
     let newCoord = {x: null, y: null};
@@ -112,8 +143,6 @@
 
 
 // D3 ––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
-
-  //See draw file;
 
   var drawLines = function(inputDataArray) {
 
