@@ -1,25 +1,48 @@
 //PATH GENERATION ––––––––––––––––––––––––––––––––––––––––––––––––––––––
-  var generatePath = function() {
-
-  };
  
-  var createDataArray = function(s) {
+  var generateAngle = function() {
+    let deg  = Math.random() * (180 - 0);
+    let rad = deg * (Math.PI) / 180;
+    return rad;
+  };
+  
+  var generatePath = function(s) {
+    path = [];
+    
     for (let i = 0; i < s; i++) {
-      generatePath();
+      alpha = generateAngle();
+      path.push(alpha);
     }
 
+    return path;
+  };
+ 
+  var createDataArray = function(n, s) {
+    let pathArray = [];
+    
+    for (let i = 0; i < n; i++) {
+      pathArray.push(generatePath(s));
+    }
+
+    return pathArray;
   };
 
   // BRAIN –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
 
   var brain = function() {
-    let s = 10, // number of paths
+    let n = 10, // number of paths
+        s = 22, // number of segments per path
+        l = 5,  // length of segment
         p = 5,  // number of parents
-        c = 10; // number of children    
+        c = 10, // number of children    
+        startPoint = {x: 50, y: 0},
+        endPoint = {x: 50, y: 100}; 
 
+    let pathArray = arrayDeepCopy(createDataArray(n, s));
 
-    console.log(createDataArray(s));
-    drawLines(rawData);
+    //D3
+    let d3Data = createD3Data(pathArray, l, startPoint);
+    drawLines(d3Data);
   };
 
 
@@ -52,6 +75,40 @@
       }
       return array;
     };
+
+// DRAW HELPER –––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+
+  var calculateXY = function(angle, l, coord = {x: 50, y: 0}) {
+    let newCoord = {x: null, y: null};
+
+    newCoord.x = coord.x + Math.cos(angle) * l;
+    newCoord.y = coord.y + Math.sin(angle) * l; // length of segment
+
+    return newCoord;
+  };
+  
+  var calculateNodes = function(pathArray, l, startPoint) {
+   let nodeArray = [];
+
+    for (let i = 0; i < pathArray.length; i++) {
+      let path = [],
+          lastPoint = startPoint;
+
+      for (let j = 0; j <= pathArray[i].length; j++) {
+        path.push(lastPoint);
+        let node = calculateXY(pathArray[i][j], l, lastPoint);
+        lastPoint = node;
+      }
+      nodeArray.push(path);
+    }
+    return nodeArray;
+  };
+
+  var createD3Data = function(pathArray, l, startPoint) {
+    let nodeArray = calculateNodes(pathArray, l, startPoint);
+
+    return [nodeArray, 'x', 'y'];
+  };
 
 
 // D3 ––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
