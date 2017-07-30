@@ -129,33 +129,146 @@
     // }
 
     return workingArray;
-  }
+  };
 
-  var selection = function(fitnessArray) {
+  var selectParent = function(accumulatedFitnessArray) {
+    let workingArray = arrayDeepCopy(accumulatedFitnessArray);
+
+    let R = Math.random(),
+        selectedParent = [{accumulatedFitness: -1}];
+
+    for (let i in workingArray) {
+      if (workingArray[i][0].accumulatedFitness > selectedParent[0].accumulatedFitness) {
+        if (workingArray[i][0].accumulatedFitness < R) {
+          selectedParent = workingArray[i];
+        }
+      }
+    }
+    return selectedParent;
+  };
+
+  var selectParents = function(workingArray, p) {
+    let selectedParentsArray = [];
+
+    while (selectedParentsArray.length < p) {
+      let selectedParent = selectParent(workingArray);
+
+      if (selectedParent[0].accumulatedFitness > -1) {
+        selectedParentsArray.push(selectedParent);
+      }
+    }
+
+    return selectedParentsArray;
+  };
+
+  var selection = function(fitnessArray, p) {
     let normalizedArray = arrayDeepCopy(normalise(fitnessArray)),
-        sortedArray = sortDescending(normalizedArray);
-    accumulateFitness(sortedArray);
+        sortedArray = sortDescending(normalizedArray),
+        accumulatedFitnessArray = arrayDeepCopy(accumulateFitness(sortedArray)),
+        selectedParents = arrayDeepCopy(selectParents(accumulatedFitnessArray, p));
+
+    return selectedParents;
+  };
+
+  // CROSSOVER –––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+
+  var selectCouple = function(parentsArray, p) {
+     let coupleArray = [],
+        one = Math.floor(Math.random() * (p - 0)),
+        two = Math.floor(Math.random() * (p - 0));
+
+    coupleArray.push(parentsArray[one], parentsArray[two]);
+
+    return coupleArray;
+  };
+
+  var createChild = function(coupleArray) {
+    let father = arrayDeepCopy(coupleArray[0]),
+        mother = arrayDeepCopy(coupleArray[1]),
+        child = [];
+
+    for (let i = 1; i < father.length; i++) {
+      let num = Math.floor(Math.random() * (2));
+
+      num === 0 ? child.push(father[i]) : child.push(mother[i]);
+    }
+
+    return child;
+  };
+
+  var createChildren = function(parentsArray, c, p) {
+    let childrenArray = [];
+
+    while (childrenArray.length < c) {
+      let coupleArray = selectCouple(parentsArray, p),
+          child = createChild(coupleArray);
+      childrenArray.push(child);
+    }
+    return childrenArray;
+  };
+
+  var crossover = function(selectedParentsArray, c, p) {
+    let parentsArray = arrayDeepCopy(selectedParentsArray),
+        childrenArray = createChildren(parentsArray, c, p);
+
+    return childrenArray;
+  };
+
+  // MUTATION ––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+
+  var mutate = function(childrenArray, m) {
+    let workingArray = arrayDeepCopy(childrenArray);
+
+    for (i = 0; i < workingArray.length; i++) {
+      for (let j in workingArray[i]) {
+        let num = Math.random();
+
+        if (num < m) {
+          workingArray[i][j] = Math.PI - workingArray[i][j];
+        }
+      }
+    }
+    return workingArray;
   };
 
   // BRAIN –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
 
-  var brain = function() {
-    let n = 10, // number of paths
-        s = 22, // number of segments per path
-        l = 5,  // length of segment
-        p = 5,  // number of parents
-        c = 10, // number of children    
-        startPoint = {x: 50, y: 0},
-        endPoint = {x: 50, y: 100}; 
+  var nextGeneration = function(pathArray, l, p, c, m, startPoint, endPoint) {
+    let fitnessArray = arrayDeepCopy(fitness(pathArray, l, startPoint, endPoint)),
+      selectedParentsArray = arrayDeepCopy(selection(fitnessArray, p)),
+      childrenArray = arrayDeepCopy(crossover(selectedParentsArray, c, p)),
+      mutatedWorkingArray = arrayDeepCopy(mutate(childrenArray, m));
 
+    return mutatedWorkingArray;
+  };
+
+  var generateZGenerations = function(n, s, l, p, c, m, z, startPoint, endPoint) {
     let pathArray = arrayDeepCopy(createDataArray(n, s)),
-        fitnessArray = arrayDeepCopy(fitness(pathArray, l, startPoint, endPoint));
+        currentGeneration = arrayDeepCopy(pathArray),
+        generationArray = [];
 
-    selection(fitnessArray);
+    for (let i = 0; i < z; i++) {
+      generationArray.push(currentGeneration);
+      currentGeneration = arrayDeepCopy(nextGeneration(currentGeneration, l, p, c, m, startPoint, endPoint));
+    }
+    return generationArray;
+  };
+
+  var brain = function() {
+    let n = 40,  // number of paths
+        s = 22,  // number of segments per path
+        l = 5,   // length of segment
+        p = 5,   // number of parents
+        c = 10,  // number of children   
+        m = 0.5, // mutation probablity
+        z = 100,  // number of generations
+        startPoint = {x: 50, y: 0},
+        endPoint = {x: 50, y: 100};
 
     //D3
-    let d3Data = createD3Data(pathArray, l, startPoint, endPoint);
-    drawLines(d3Data);
+
+    let zGenerationsArray = generateZGenerations(n, s, l, p, c, m, z, startPoint, endPoint);
+    drawZGenerations(zGenerationsArray, l, startPoint);
   };
 
 
@@ -229,6 +342,13 @@
     let nodeArray = calculateNodes(pathArray, l, startPoint);
 
     return [nodeArray, 'x', 'y'];
+  };
+
+  var drawZGenerations = function(zGenerationsArray, l, startPoint) {
+    for (let i = 0; i < zGenerationsArray.length; i++) {
+      let inputDataArray = createD3Data(zGenerationsArray[i], l, startPoint);
+      drawLines(inputDataArray);
+    }
   };
 
 
