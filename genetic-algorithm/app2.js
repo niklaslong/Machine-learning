@@ -13,7 +13,6 @@
       alpha = generateAngle();
       path.push(alpha);
     }
-
     return path;
   };
  
@@ -46,15 +45,58 @@
       return angleArray;
     };
 
+    var calculateScore = function(distanceObj, totalDistance) {
+      let distance = totalDistance - distanceObj.distance,
+          score = distance * 100 / totalDistance;
+          
+      distanceObj.rawFitness = score;
+      return distanceObj;
+    };
+
+    var calculateFitness = function(distanceArray, startPoint, endPoint) {
+      let totalDistance = asCrowFlies(startPoint, endPoint);
+
+      for (let i = 0; i < distanceArray.length; i++) {
+        calculateScore(distanceArray[i][0], totalDistance);
+      }
+      return distanceArray;
+    };
+
     var fitness = function(pathArray, l, startPoint, endPoint) {
       let angleArray = arrayDeepCopy(pathArray),
           nodeArray = arrayDeepCopy(calculateNodes(angleArray, l, startPoint)),
-          angle_w_distance_a = arrayDeepCopy(calculateDistance(angleArray, nodeArray, endPoint));
-      
-          
+          angle_w_distance_a = arrayDeepCopy(calculateDistance(angleArray, nodeArray, endPoint)),
+          scoreArray = arrayDeepCopy(calculateFitness(angle_w_distance_a, startPoint, endPoint));
 
-      return 'nothing returned from fitness yet!';
+      
+      return scoreArray;
     };
+
+  // SELECTION –––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+
+  var normalise = function(fitnessArray) {
+    let workingArray = arrayDeepCopy(fitnessArray),
+        rawFitnessArray = [],
+        fitnessTotal = 0;
+
+    for (let i = 0; i < workingArray.length; i++) {
+      rawFitnessArray.push(workingArray[i][0]);
+    }
+
+    for (let i = 0; i < rawFitnessArray.length; i++) {
+      fitnessTotal += rawFitnessArray[i].rawFitness;
+    }
+
+    for (let i = 0; i < workingArray.length; i++) {
+      let normalisedFitness = workingArray[i][0].rawFitness / fitnessTotal;
+      workingArray[i][0].normalisedFitness = normalisedFitness;
+    }
+    console.log(workingArray);
+  };
+
+  var selection = function(fitnessArray) {
+    let normalizedArray = normalise(fitnessArray);
+  };
 
   // BRAIN –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
 
@@ -67,9 +109,10 @@
         startPoint = {x: 50, y: 0},
         endPoint = {x: 50, y: 100}; 
 
-    let pathArray = arrayDeepCopy(createDataArray(n, s));
+    let pathArray = arrayDeepCopy(createDataArray(n, s)),
+        fitnessArray = arrayDeepCopy(fitness(pathArray, l, startPoint, endPoint));
 
-    console.log(fitness(pathArray, l, startPoint, endPoint));
+    selection(fitnessArray);
 
     //D3
     let d3Data = createD3Data(pathArray, l, startPoint, endPoint);
@@ -105,6 +148,14 @@
         array[j] = currEl;
       }
       return array;
+    };
+
+    var asCrowFlies = function(startPoint, endPoint) {
+      let deltaX = endPoint.x - startPoint.x,
+          deltaY = endPoint.y - startPoint.y;
+
+      let deltaD  = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+      return deltaD;
     };
 
 // DRAW and FITNESS HELPER –––––––––––––––––––––––––––––––––––––––––––––––––––––––––
