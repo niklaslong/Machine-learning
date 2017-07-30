@@ -91,11 +91,50 @@
       let normalisedFitness = workingArray[i][0].rawFitness / fitnessTotal;
       workingArray[i][0].normalisedFitness = normalisedFitness;
     }
-    console.log(workingArray);
+
+    // verification - totalCheck should equal 1
+    // let totalCheck = 0;
+    // for (let i in workingArray) {
+    //   totalCheck += workingArray[i][0].normalisedFitness;
+    // }
+    // console.log(totalCheck);
+
+    return workingArray;
   };
 
+  var sortDescending = function(normalizedArray) {
+    let workingArray = arrayDeepCopy(normalizedArray);
+
+    workingArray.sort(function(a, b) {
+      return b[0].normalisedFitness - a[0].normalisedFitness;
+    });
+    return workingArray;
+  };
+
+  var accumulateFitness = function(sortedArray) {
+    let workingArray = arrayDeepCopy(sortedArray);
+
+    for (let i = 0; i < workingArray.length; i++) {
+      workingArray[i][0].accumulatedFitness = 0;
+
+      for (let j = 0; j <= i; j++) {
+        workingArray[i][0].accumulatedFitness +=
+        workingArray[j][0].normalisedFitness;
+      }
+    }
+
+    // verification
+    // for (let i in workingArray) {
+    //   console.log(workingArray[i][0].accumulatedFitness);
+    // }
+
+    return workingArray;
+  }
+
   var selection = function(fitnessArray) {
-    let normalizedArray = normalise(fitnessArray);
+    let normalizedArray = arrayDeepCopy(normalise(fitnessArray)),
+        sortedArray = sortDescending(normalizedArray);
+    accumulateFitness(sortedArray);
   };
 
   // BRAIN –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
