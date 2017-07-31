@@ -134,7 +134,7 @@
   var selectParent = function(accumulatedFitnessArray) {
     let workingArray = arrayDeepCopy(accumulatedFitnessArray);
 
-    let R = Math.random(),
+    let R = Math.random() * (1 - 0.5),
         selectedParent = [{accumulatedFitness: -1}];
 
     for (let i in workingArray) {
@@ -224,7 +224,7 @@
         let num = Math.random();
 
         if (num < m) {
-          workingArray[i][j] = Math.PI - workingArray[i][j];
+          workingArray[i][j] = Math.PI - workingArray[i][j] * Math.random() * (Math.PI/workingArray[i][j] - 0);
         }
       }
     }
@@ -255,12 +255,12 @@
   };
 
   var brain = function() {
-    let n = 40,  // number of paths
+    let n = 100,  // number of paths
         s = 22,  // number of segments per path
         l = 5,   // length of segment
-        p = 5,   // number of parents
-        c = 10,  // number of children   
-        m = 0.5, // mutation probablity
+        p = 10,   // number of parents
+        c = 100,  // number of children   
+        m = 0.2, // mutation probablity
         z = 100,  // number of generations
         startPoint = {x: 50, y: 0},
         endPoint = {x: 50, y: 100};
